@@ -26,6 +26,8 @@
           <a href="#courses">Courses</a>
           <a href="#assignments">Assignments</a>
           <a href="#quizzes">Quizzes</a>
+          <a href="#resources">Media library</a>
+          <a href="#operations">Operations</a>
           <a href="#grades">Gradebook</a>
           <a href="#discussions">Discussions</a>
           <a href="#calendar">Calendar</a>
@@ -122,6 +124,41 @@
         </section>
 
         <section class="split-grid">
+          <div class="panel" id="resources">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Video & document system</p>
+                <h2>Learning media library</h2>
+              </div>
+            </div>
+            <div class="list resource-list" id="resourceList"></div>
+          </div>
+
+          <div class="panel" id="operations">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Learner operations</p>
+                <h2>Enrollments & attendance</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Learner</th>
+                    <th>Course</th>
+                    <th>Progress</th>
+                    <th>Attendance</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="enrollmentRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="split-grid">
           <div class="panel" id="grades">
             <div class="section__header">
               <div>
@@ -152,6 +189,28 @@
               </div>
             </div>
             <div class="list" id="discussionList"></div>
+          </div>
+        </section>
+
+        <section class="split-grid">
+          <div class="panel" id="certificates">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Credentials</p>
+                <h2>Certificates</h2>
+              </div>
+            </div>
+            <div class="list" id="certificateList"></div>
+          </div>
+
+          <div class="panel" id="support">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Service desk</p>
+                <h2>Support tickets</h2>
+              </div>
+            </div>
+            <div class="list" id="supportList"></div>
           </div>
         </section>
 

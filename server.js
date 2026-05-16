@@ -17,7 +17,10 @@ const contentTypes = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.pdf': 'application/pdf'
 };
 
 async function readStore() {
@@ -60,11 +63,16 @@ function nextId(items) {
   return Math.max(0, ...items.map((item) => Number(item.id) || 0)) + 1;
 }
 
-function withCourseNames(store, collection) {
+function withCourseNames(store, collection = []) {
   return collection.map((item) => ({
     ...item,
     courseTitle: store.courses.find((course) => course.id === item.courseId)?.title || 'General'
   }));
+}
+
+function collection(store, key) {
+  if (!Array.isArray(store[key])) store[key] = [];
+  return store[key];
 }
 
 function buildSummary(store) {
@@ -76,6 +84,7 @@ function buildSummary(store) {
   const averageGrade = Math.round(
     store.grades.reduce((total, grade) => total + grade.score, 0) / store.grades.length
   );
+  const resources = collection(store, 'resources');
 
   return {
     learners,
@@ -85,7 +94,12 @@ function buildSummary(store) {
     averageProgress,
     averageGrade,
     upcomingEvents: store.calendar.length,
-    discussionPosts: store.discussions.reduce((total, item) => total + item.replies, 0)
+    discussionPosts: store.discussions.reduce((total, item) => total + item.replies, 0),
+    videoAssets: resources.filter((resource) => resource.type === 'video').length,
+    documentAssets: resources.filter((resource) => resource.type === 'document').length,
+    certificatesIssued: collection(store, 'certificates').filter((certificate) => certificate.status === 'issued').length,
+    activeEnrollments: collection(store, 'enrollments').filter((enrollment) => enrollment.status === 'active').length,
+    openSupportTickets: collection(store, 'supportTickets').filter((ticket) => ticket.status !== 'resolved').length
   };
 }
 
@@ -113,7 +127,17 @@ async function handleApi(req, res, url) {
       })),
       announcements: store.announcements,
       discussions: withCourseNames(store, store.discussions),
-      calendar: store.calendar
+      calendar: store.calendar,
+      resources: withCourseNames(store, collection(store, 'resources')),
+      certificates: withCourseNames(store, collection(store, 'certificates')).map((certificate) => ({
+        ...certificate,
+        student: store.users.find((user) => user.id === certificate.studentId)?.name || 'Unknown learner'
+      })),
+      enrollments: withCourseNames(store, collection(store, 'enrollments')).map((enrollment) => ({
+        ...enrollment,
+        student: store.users.find((user) => user.id === enrollment.studentId)?.name || 'Unknown learner'
+      })),
+      supportTickets: collection(store, 'supportTickets')
     });
   }
 
@@ -179,6 +203,50 @@ async function handleApi(req, res, url) {
     store.announcements.unshift(announcement);
     await writeStore(store);
     return sendJson(res, 201, announcement);
+  }
+
+  if (req.method === 'POST' && route === '/api/resources') {
+    const body = await parseBody(req);
+    if (!body.courseId || !body.title || !body.type || !body.url) {
+      return badRequest(res, 'Resource courseId, title, type, and url are required.');
+    }
+    if (!['video', 'document'].includes(body.type)) {
+      return badRequest(res, 'Resource type must be video or document.');
+    }
+    const resource = {
+      id: nextId(collection(store, 'resources')),
+      courseId: Number(body.courseId),
+      title: body.title,
+      type: body.type,
+      url: body.url,
+      duration: body.duration || '',
+      size: body.size || '',
+      access: body.access || 'enrolled',
+      status: body.status || 'published',
+      updatedAt: body.updatedAt || new Date().toISOString().slice(0, 10)
+    };
+    collection(store, 'resources').push(resource);
+    await writeStore(store);
+    return sendJson(res, 201, resource);
+  }
+
+  if (req.method === 'POST' && route === '/api/certificates') {
+    const body = await parseBody(req);
+    if (!body.courseId || !body.studentId) {
+      return badRequest(res, 'Certificate courseId and studentId are required.');
+    }
+    const certificate = {
+      id: nextId(collection(store, 'certificates')),
+      courseId: Number(body.courseId),
+      studentId: Number(body.studentId),
+      title: body.title || 'Course completion certificate',
+      issuedDate: body.issuedDate || new Date().toISOString().slice(0, 10),
+      credentialId: body.credentialId || `LF-${Date.now()}`,
+      status: body.status || 'issued'
+    };
+    collection(store, 'certificates').push(certificate);
+    await writeStore(store);
+    return sendJson(res, 201, certificate);
   }
 
   return notFound(res);
