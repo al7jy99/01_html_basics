@@ -1,0 +1,91 @@
+{
+  "users": [
+    { "id": 1, "name": "Ava Thompson", "role": "admin", "email": "ava.admin@learnflow.test", "avatar": "AT", "status": "active" },
+    { "id": 2, "name": "Marco Lee", "role": "instructor", "email": "marco.lee@learnflow.test", "avatar": "ML", "status": "active" },
+    { "id": 3, "name": "Nia Patel", "role": "student", "email": "nia.patel@learnflow.test", "avatar": "NP", "status": "active" },
+    { "id": 4, "name": "Jordan Smith", "role": "student", "email": "jordan.smith@learnflow.test", "avatar": "JS", "status": "active" }
+  ],
+  "courses": [
+    {
+      "id": 101,
+      "title": "Frontend Foundations",
+      "category": "Web Development",
+      "level": "Beginner",
+      "instructorId": 2,
+      "summary": "HTML, CSS, accessibility, responsive layouts, and JavaScript fundamentals.",
+      "hero": "linear-gradient(135deg, #6944ff, #00b8d9)",
+      "progress": 72,
+      "rating": 4.9,
+      "lessons": [
+        { "id": 1001, "title": "Semantic HTML", "duration": "42 min", "type": "video", "completed": true },
+        { "id": 1002, "title": "Responsive CSS Systems", "duration": "58 min", "type": "lab", "completed": true },
+        { "id": 1003, "title": "DOM Events", "duration": "50 min", "type": "workshop", "completed": false }
+      ]
+    },
+    {
+      "id": 102,
+      "title": "Product Design Sprint",
+      "category": "Design",
+      "level": "Intermediate",
+      "instructorId": 2,
+      "summary": "Research, prototyping, usability testing, and high-impact design storytelling.",
+      "hero": "linear-gradient(135deg, #ff7a59, #ffc857)",
+      "progress": 48,
+      "rating": 4.7,
+      "lessons": [
+        { "id": 2001, "title": "Problem Framing", "duration": "35 min", "type": "reading", "completed": true },
+        { "id": 2002, "title": "Rapid Prototype", "duration": "1 hr 20 min", "type": "lab", "completed": false },
+        { "id": 2003, "title": "Usability Review", "duration": "55 min", "type": "critique", "completed": false }
+      ]
+    },
+    {
+      "id": 103,
+      "title": "Data Storytelling",
+      "category": "Analytics",
+      "level": "Advanced",
+      "instructorId": 2,
+      "summary": "Turn dashboards and experiments into clear executive narratives.",
+      "hero": "linear-gradient(135deg, #00a676, #7bdff2)",
+      "progress": 28,
+      "rating": 4.8,
+      "lessons": [
+        { "id": 3001, "title": "Narrative Metrics", "duration": "45 min", "type": "video", "completed": true },
+        { "id": 3002, "title": "Visualization Patterns", "duration": "1 hr", "type": "workshop", "completed": false },
+        { "id": 3003, "title": "Stakeholder Readout", "duration": "40 min", "type": "project", "completed": false }
+      ]
+    }
+  ],
+  "assignments": [
+    { "id": 501, "courseId": 101, "title": "Build a semantic landing page", "dueDate": "2026-05-22", "points": 100, "status": "submitted", "submissions": 18 },
+    { "id": 502, "courseId": 101, "title": "Accessibility audit checklist", "dueDate": "2026-05-27", "points": 50, "status": "open", "submissions": 9 },
+    { "id": 503, "courseId": 102, "title": "Clickable prototype", "dueDate": "2026-06-02", "points": 120, "status": "open", "submissions": 12 },
+    { "id": 504, "courseId": 103, "title": "Executive dashboard brief", "dueDate": "2026-06-07", "points": 80, "status": "draft", "submissions": 6 }
+  ],
+  "quizzes": [
+    { "id": 701, "courseId": 101, "title": "HTML & CSS mastery check", "questions": 12, "timeLimit": "20 min", "averageScore": 88, "published": true },
+    { "id": 702, "courseId": 102, "title": "Design sprint decision quiz", "questions": 8, "timeLimit": "15 min", "averageScore": 81, "published": true },
+    { "id": 703, "courseId": 103, "title": "Visualization principles", "questions": 10, "timeLimit": "18 min", "averageScore": 76, "published": false }
+  ],
+  "grades": [
+    { "studentId": 3, "courseId": 101, "score": 94, "letter": "A", "trend": "+6%" },
+    { "studentId": 3, "courseId": 102, "score": 87, "letter": "B+", "trend": "+3%" },
+    { "studentId": 4, "courseId": 101, "score": 82, "letter": "B", "trend": "-1%" },
+    { "studentId": 4, "courseId": 103, "score": 91, "letter": "A-", "trend": "+8%" }
+  ],
+  "announcements": [
+    { "id": 901, "title": "Live portfolio review", "message": "Join the Friday critique room for instructor feedback and peer reviews.", "audience": "All learners", "date": "2026-05-17" },
+    { "id": 902, "title": "New rubric published", "message": "The semantic landing page rubric now includes accessibility scoring examples.", "audience": "Frontend Foundations", "date": "2026-05-18" },
+    { "id": 903, "title": "Office hours moved", "message": "This week's instructor office hours will run 30 minutes later than usual.", "audience": "All cohorts", "date": "2026-05-20" }
+  ],
+  "discussions": [
+    { "id": 801, "courseId": 101, "author": "Nia Patel", "title": "Best way to structure a responsive nav?", "replies": 14, "lastActivity": "2026-05-15" },
+    { "id": 802, "courseId": 102, "author": "Jordan Smith", "title": "Prototype testing script examples", "replies": 8, "lastActivity": "2026-05-14" },
+    { "id": 803, "courseId": 103, "author": "Marco Lee", "title": "Choosing the right chart for an outlier", "replies": 11, "lastActivity": "2026-05-13" }
+  ],
+  "calendar": [
+    { "id": 601, "title": "Portfolio review", "type": "event", "date": "2026-05-17", "time": "14:00" },
+    { "id": 602, "title": "Landing page assignment due", "type": "deadline", "date": "2026-05-22", "time": "23:59" },
+    { "id": 603, "title": "Instructor office hours", "type": "event", "date": "2026-05-20", "time": "18:30" },
+    { "id": 604, "title": "Prototype project due", "type": "deadline", "date": "2026-06-02", "time": "23:59" }
+  ]
+}

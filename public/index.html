@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="LearnFlow is a full-stack learning management system with courses, lessons, assignments, quizzes, grades, discussions, calendars, and admin reporting."
+    />
+    <title>LearnFlow LMS</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <a class="brand" href="#dashboard" aria-label="LearnFlow dashboard">
+          <span class="brand__mark">LF</span>
+          <span>
+            <strong>LearnFlow</strong>
+            <small>Complete LMS</small>
+          </span>
+        </a>
+
+        <nav class="nav-list">
+          <a href="#dashboard" class="active">Dashboard</a>
+          <a href="#courses">Courses</a>
+          <a href="#assignments">Assignments</a>
+          <a href="#quizzes">Quizzes</a>
+          <a href="#grades">Gradebook</a>
+          <a href="#discussions">Discussions</a>
+          <a href="#calendar">Calendar</a>
+          <a href="#admin">Admin</a>
+        </nav>
+
+        <section class="profile-card" aria-label="Signed in user">
+          <div class="avatar">NP</div>
+          <div>
+            <strong>Nia Patel</strong>
+            <span>Student workspace</span>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main-content">
+        <header class="hero" id="dashboard">
+          <div>
+            <p class="eyebrow">Modern learning operations</p>
+            <h1>Teach, learn, assess, and grow from one beautiful LMS.</h1>
+            <p>
+              A polished full-stack web app with a Node backend, JSON data store, responsive frontend,
+              and core LMS workflows for learners, instructors, and administrators.
+            </p>
+            <div class="hero__actions">
+              <a class="button button--primary" href="#courses">Explore courses</a>
+              <a class="button button--ghost" href="#admin">Open admin console</a>
+            </div>
+          </div>
+          <form class="quick-create" id="courseForm">
+            <span class="form-label">Create a course</span>
+            <label>
+              Course title
+              <input name="title" type="text" placeholder="AI for educators" required />
+            </label>
+            <label>
+              Summary
+              <textarea name="summary" rows="3" placeholder="What learners will accomplish" required></textarea>
+            </label>
+            <div class="form-grid">
+              <label>
+                Category
+                <input name="category" type="text" placeholder="Teaching" />
+              </label>
+              <label>
+                Level
+                <select name="level">
+                  <option>Beginner</option>
+                  <option>Intermediate</option>
+                  <option>Advanced</option>
+                </select>
+              </label>
+            </div>
+            <button class="button button--primary" type="submit">Publish course</button>
+            <p class="form-status" id="courseStatus" role="status"></p>
+          </form>
+        </header>
+
+        <section class="stats-grid" aria-label="LMS metrics" id="statsGrid"></section>
+
+        <section class="section" id="courses">
+          <div class="section__header">
+            <div>
+              <p class="eyebrow">Course catalog</p>
+              <h2>Active learning paths</h2>
+            </div>
+            <div class="search-box">
+              <input id="courseSearch" type="search" placeholder="Search courses" aria-label="Search courses" />
+            </div>
+          </div>
+          <div class="course-grid" id="courseGrid"></div>
+        </section>
+
+        <section class="split-grid">
+          <div class="panel" id="assignments">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Assignments</p>
+                <h2>Submission workflow</h2>
+              </div>
+            </div>
+            <div class="list" id="assignmentList"></div>
+          </div>
+
+          <div class="panel" id="quizzes">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Assessments</p>
+                <h2>Quiz engine</h2>
+              </div>
+            </div>
+            <div class="list" id="quizList"></div>
+          </div>
+        </section>
+
+        <section class="split-grid">
+          <div class="panel" id="grades">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Gradebook</p>
+                <h2>Progress and performance</h2>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Learner</th>
+                    <th>Course</th>
+                    <th>Score</th>
+                    <th>Trend</th>
+                  </tr>
+                </thead>
+                <tbody id="gradeRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" id="discussions">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Community</p>
+                <h2>Discussion forums</h2>
+              </div>
+            </div>
+            <div class="list" id="discussionList"></div>
+          </div>
+        </section>
+
+        <section class="split-grid">
+          <div class="panel" id="calendar">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Planning</p>
+                <h2>Calendar</h2>
+              </div>
+            </div>
+            <div class="timeline" id="calendarList"></div>
+          </div>
+
+          <div class="panel" id="admin">
+            <div class="section__header">
+              <div>
+                <p class="eyebrow">Administration</p>
+                <h2>Users & announcements</h2>
+              </div>
+            </div>
+            <form class="announcement-form" id="announcementForm">
+              <input name="title" type="text" placeholder="Announcement title" required />
+              <textarea name="message" rows="3" placeholder="Message learners and staff" required></textarea>
+              <button class="button button--primary" type="submit">Send announcement</button>
+              <p class="form-status" id="announcementStatus" role="status"></p>
+            </form>
+            <div class="list" id="announcementList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="courseCardTemplate">
+      <article class="course-card">
+        <div class="course-card__hero"></div>
+        <div class="course-card__body">
+          <div class="course-card__meta"></div>
+          <h3></h3>
+          <p></p>
+          <div class="progress" aria-label="Course progress"><span></span></div>
+          <div class="course-card__footer"></div>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

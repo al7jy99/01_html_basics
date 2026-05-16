@@ -1,0 +1,22 @@
+{
+  "name": "learnflow-lms",
+  "version": "1.0.0",
+  "description": "A full-stack learning management system demo with a polished frontend and JSON-backed API.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/api.test.js"
+  },
+  "keywords": [
+    "lms",
+    "education",
+    "node",
+    "frontend",
+    "backend"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
