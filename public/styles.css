@@ -308,7 +308,7 @@ textarea:focus {
 }
 
 .stats-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .stat-card {
@@ -403,6 +403,23 @@ textarea:focus {
   gap: 12px;
 }
 
+.resource-list {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.resource-item {
+  border-left: 5px solid var(--primary);
+}
+
+.resource-link {
+  color: var(--primary-dark);
+  font-weight: 900;
+}
+
+.resource-link::after {
+  content: " →";
+}
+
 .list-item,
 .timeline-item {
   display: grid;
@@ -495,7 +512,7 @@ th {
   }
 
   .nav-list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     margin: 28px 0;
   }
 

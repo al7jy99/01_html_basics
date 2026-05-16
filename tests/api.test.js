@@ -90,3 +90,53 @@ test('announcement creation adds a new announcement to the top of the feed', asy
   const bootstrap = await fetch(`${app.baseUrl}/api/bootstrap`).then((item) => item.json());
   assert.equal(bootstrap.announcements[0].title, 'Welcome');
 });
+
+test('resource creation supports video and document library workflows', async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+
+  const invalid = await fetch(`${app.baseUrl}/api/resources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ courseId: 101, title: 'Bad type', type: 'audio', url: '/audio.mp3' })
+  });
+  assert.equal(invalid.status, 400);
+
+  const created = await fetch(`${app.baseUrl}/api/resources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      courseId: 101,
+      title: 'DOM events walkthrough',
+      type: 'video',
+      url: '/media/dom-events.mp4',
+      duration: '36 min'
+    })
+  });
+  assert.equal(created.status, 201);
+  const resource = await created.json();
+  assert.equal(resource.type, 'video');
+
+  const bootstrap = await fetch(`${app.baseUrl}/api/bootstrap`).then((item) => item.json());
+  assert.ok(bootstrap.resources.some((item) => item.title === 'DOM events walkthrough'));
+  assert.equal(bootstrap.summary.videoAssets, 3);
+});
+
+test('certificate creation issues learner credentials', async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+
+  const response = await fetch(`${app.baseUrl}/api/certificates`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ courseId: 101, studentId: 3, title: 'Accessibility Champion' })
+  });
+
+  assert.equal(response.status, 201);
+  const certificate = await response.json();
+  assert.equal(certificate.status, 'issued');
+
+  const bootstrap = await fetch(`${app.baseUrl}/api/bootstrap`).then((item) => item.json());
+  assert.ok(bootstrap.certificates.some((item) => item.title === 'Accessibility Champion'));
+  assert.equal(bootstrap.summary.certificatesIssued, 2);
+});

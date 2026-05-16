@@ -18,6 +18,10 @@ const selectors = {
   gradeRows: document.querySelector('#gradeRows'),
   discussionList: document.querySelector('#discussionList'),
   calendarList: document.querySelector('#calendarList'),
+  resourceList: document.querySelector('#resourceList'),
+  enrollmentRows: document.querySelector('#enrollmentRows'),
+  certificateList: document.querySelector('#certificateList'),
+  supportList: document.querySelector('#supportList'),
   announcementList: document.querySelector('#announcementList'),
   courseForm: document.querySelector('#courseForm'),
   courseStatus: document.querySelector('#courseStatus'),
@@ -45,6 +49,11 @@ function statCards(summary) {
     ['Average grade', `${summary.averageGrade}%`],
     ['Open assignments', summary.openAssignments],
     ['Upcoming events', summary.upcomingEvents],
+    ['Video assets', summary.videoAssets],
+    ['Documents', summary.documentAssets],
+    ['Certificates', summary.certificatesIssued],
+    ['Enrollments', summary.activeEnrollments],
+    ['Support tickets', summary.openSupportTickets],
     ['Instructor team', summary.instructors],
     ['Forum replies', summary.discussionPosts]
   ];
@@ -145,6 +154,61 @@ function renderCalendar(events) {
     .join('');
 }
 
+
+function renderResources(resources) {
+  renderList(selectors.resourceList, resources, (resource) => `
+    <article class="list-item resource-item">
+      <div class="list-item__top">
+        <strong>${resource.title}</strong>
+        <span class="badge">${resource.type}</span>
+      </div>
+      <span class="meta-line">${resource.courseTitle} • ${resource.status} • ${resource.access} access</span>
+      <p>${resource.type === 'video' ? `Runtime ${resource.duration}` : `File size ${resource.size}`} • Updated ${formatDate.format(new Date(resource.updatedAt))}</p>
+      <a class="resource-link" href="${resource.url}" aria-label="Open ${resource.title}">Open resource</a>
+    </article>
+  `);
+}
+
+function renderEnrollments(enrollments) {
+  selectors.enrollmentRows.innerHTML = enrollments
+    .map((enrollment) => `
+      <tr>
+        <td>${enrollment.student}</td>
+        <td>${enrollment.courseTitle}</td>
+        <td><span class="score">${enrollment.progress}%</span></td>
+        <td>${enrollment.attendance}</td>
+        <td><span class="badge">${enrollment.status}</span></td>
+      </tr>
+    `)
+    .join('');
+}
+
+function renderCertificates(certificates) {
+  renderList(selectors.certificateList, certificates, (certificate) => `
+    <article class="list-item">
+      <div class="list-item__top">
+        <strong>${certificate.title}</strong>
+        <span class="badge">${certificate.status}</span>
+      </div>
+      <span class="meta-line">${certificate.student} • ${certificate.courseTitle}</span>
+      <p>Credential ${certificate.credentialId} • Issued ${formatDate.format(new Date(certificate.issuedDate))}</p>
+    </article>
+  `);
+}
+
+function renderSupportTickets(tickets) {
+  renderList(selectors.supportList, tickets, (ticket) => `
+    <article class="list-item">
+      <div class="list-item__top">
+        <strong>${ticket.title}</strong>
+        <span class="badge">${ticket.priority}</span>
+      </div>
+      <span class="meta-line">${ticket.requester} • ${ticket.owner}</span>
+      <p>${ticket.status} • Updated ${formatDate.format(new Date(ticket.updatedAt))}</p>
+    </article>
+  `);
+}
+
 function renderAnnouncements(announcements) {
   renderList(selectors.announcementList, announcements, (announcement) => `
     <article class="list-item">
@@ -166,6 +230,10 @@ function render() {
   renderGrades(state.data.grades);
   renderDiscussions(state.data.discussions);
   renderCalendar(state.data.calendar);
+  renderResources(state.data.resources);
+  renderEnrollments(state.data.enrollments);
+  renderCertificates(state.data.certificates);
+  renderSupportTickets(state.data.supportTickets);
   renderAnnouncements(state.data.announcements);
 }
 
