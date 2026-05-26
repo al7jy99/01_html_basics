@@ -67,15 +67,216 @@ function withCourseNames(store, collection) {
   }));
 }
 
+const collectionConfigs = {
+  users: {
+    required: ['name', 'role', 'email'],
+    label: 'User',
+    defaults: (body) => ({
+      avatar: body.avatar || initials(body.name),
+      status: body.status || 'active'
+    })
+  },
+  courses: {
+    required: ['title', 'summary'],
+    label: 'Course',
+    validationMessage: 'Course title and summary are required.',
+    defaults: (body) => ({
+      category: body.category || 'General',
+      level: body.level || 'Beginner',
+      instructorId: Number(body.instructorId) || 2,
+      hero: body.hero || 'linear-gradient(135deg, #6944ff, #00b8d9)',
+      progress: Number(body.progress) || 0,
+      rating: Number(body.rating) || 0,
+      lessons: Array.isArray(body.lessons) ? body.lessons : []
+    })
+  },
+  assignments: {
+    required: ['courseId', 'title', 'dueDate'],
+    label: 'Assignment',
+    validationMessage: 'Assignment courseId, title, and dueDate are required.',
+    defaults: (body) => ({
+      courseId: Number(body.courseId),
+      points: Number(body.points) || 100,
+      status: body.status || 'open',
+      submissions: Number(body.submissions) || 0
+    })
+  },
+  quizzes: {
+    required: ['courseId', 'title'],
+    label: 'Quiz',
+    defaults: (body) => ({
+      courseId: Number(body.courseId),
+      questions: Number(body.questions) || 0,
+      timeLimit: body.timeLimit || '15 min',
+      averageScore: Number(body.averageScore) || 0,
+      published: parseBoolean(body.published)
+    })
+  },
+  grades: {
+    required: ['studentId', 'courseId', 'score'],
+    label: 'Grade',
+    defaults: (body) => {
+      const score = Number(body.score);
+      return {
+        studentId: Number(body.studentId),
+        courseId: Number(body.courseId),
+        score,
+        letter: body.letter || letterGrade(score),
+        trend: body.trend || '0%'
+      };
+    }
+  },
+  announcements: {
+    required: ['title', 'message'],
+    label: 'Announcement',
+    validationMessage: 'Announcement title and message are required.',
+    defaults: (body) => ({
+      audience: body.audience || 'All learners',
+      date: body.date || new Date().toISOString().slice(0, 10)
+    }),
+    insert: 'unshift'
+  },
+  discussions: {
+    required: ['courseId', 'author', 'title'],
+    label: 'Discussion',
+    defaults: (body) => ({
+      courseId: Number(body.courseId),
+      replies: Number(body.replies) || 0,
+      lastActivity: body.lastActivity || new Date().toISOString().slice(0, 10)
+    })
+  },
+  calendar: {
+    required: ['title', 'date'],
+    label: 'Calendar event',
+    defaults: (body) => ({
+      type: body.type || 'event',
+      time: body.time || '09:00'
+    })
+  }
+};
+
+function parseBoolean(value) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  return Boolean(value);
+}
+
+function initials(name = '') {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('') || 'U';
+}
+
+function letterGrade(score) {
+  if (score >= 97) return 'A+';
+  if (score >= 93) return 'A';
+  if (score >= 90) return 'A-';
+  if (score >= 87) return 'B+';
+  if (score >= 83) return 'B';
+  if (score >= 80) return 'B-';
+  if (score >= 77) return 'C+';
+  if (score >= 73) return 'C';
+  if (score >= 70) return 'C-';
+  if (score >= 67) return 'D+';
+  if (score >= 63) return 'D';
+  if (score >= 60) return 'D-';
+  return 'F';
+}
+
+function validateRequired(body, config) {
+  const missing = config.required.filter((field) => body[field] === undefined || body[field] === null || body[field] === '');
+  if (missing.length) {
+    return config.validationMessage || `${config.label} ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} required.`;
+  }
+  return null;
+}
+
+function buildRecord(collection, body, existing = {}) {
+  const config = collectionConfigs[collection];
+  const merged = { ...existing, ...body };
+  return {
+    ...merged,
+    ...config.defaults(merged, existing)
+  };
+}
+
+function itemId(item) {
+  return Number(item.id);
+}
+
+async function handleCollectionApi(req, res, store, route) {
+  const [, , collection, idSegment] = route.split('/');
+  const config = collectionConfigs[collection];
+  if (!config) return false;
+
+  const items = store[collection];
+  if (!Array.isArray(items)) return false;
+
+  if (req.method === 'GET' && !idSegment) {
+    return sendJson(res, 200, items);
+  }
+
+  if (req.method === 'GET' && idSegment) {
+    const id = Number(idSegment);
+    const item = items.find((entry) => itemId(entry) === id);
+    return item ? sendJson(res, 200, item) : notFound(res);
+  }
+
+  if (req.method === 'POST' && !idSegment) {
+    const body = await parseBody(req);
+    const validationError = validateRequired(body, config);
+    if (validationError) return badRequest(res, validationError);
+
+    const record = { ...buildRecord(collection, body), id: nextId(items) };
+    if (config.insert === 'unshift') items.unshift(record);
+    else items.push(record);
+
+    await writeStore(store);
+    return sendJson(res, 201, record);
+  }
+
+  if ((req.method === 'PUT' || req.method === 'PATCH') && idSegment) {
+    const id = Number(idSegment);
+    const index = items.findIndex((entry) => itemId(entry) === id);
+    if (index === -1) return notFound(res);
+
+    const body = await parseBody(req);
+    if (req.method === 'PUT') {
+      const validationError = validateRequired(body, config);
+      if (validationError) return badRequest(res, validationError);
+    }
+
+    const existing = req.method === 'PUT' ? {} : items[index];
+    items[index] = { ...buildRecord(collection, body, existing), id };
+    await writeStore(store);
+    return sendJson(res, 200, items[index]);
+  }
+
+  if (req.method === 'DELETE' && idSegment) {
+    const id = Number(idSegment);
+    const index = items.findIndex((entry) => itemId(entry) === id);
+    if (index === -1) return notFound(res);
+
+    const [removed] = items.splice(index, 1);
+    await writeStore(store);
+    return sendJson(res, 200, removed);
+  }
+
+  return false;
+}
+
 function buildSummary(store) {
   const learners = store.users.filter((user) => user.role === 'student').length;
   const instructors = store.users.filter((user) => user.role === 'instructor').length;
-  const averageProgress = Math.round(
-    store.courses.reduce((total, course) => total + course.progress, 0) / store.courses.length
-  );
-  const averageGrade = Math.round(
-    store.grades.reduce((total, grade) => total + grade.score, 0) / store.grades.length
-  );
+  const averageProgress = store.courses.length
+    ? Math.round(store.courses.reduce((total, course) => total + course.progress, 0) / store.courses.length)
+    : 0;
+  const averageGrade = store.grades.length
+    ? Math.round(store.grades.reduce((total, grade) => total + grade.score, 0) / store.grades.length)
+    : 0;
 
   return {
     learners,
@@ -117,69 +318,8 @@ async function handleApi(req, res, url) {
     });
   }
 
-  if (req.method === 'GET' && route === '/api/courses') {
-    return sendJson(res, 200, store.courses);
-  }
-
-  if (req.method === 'GET' && route.startsWith('/api/courses/')) {
-    const id = Number(route.split('/').pop());
-    const course = store.courses.find((item) => item.id === id);
-    return course ? sendJson(res, 200, course) : notFound(res);
-  }
-
-  if (req.method === 'POST' && route === '/api/courses') {
-    const body = await parseBody(req);
-    if (!body.title || !body.summary) return badRequest(res, 'Course title and summary are required.');
-    const course = {
-      id: nextId(store.courses),
-      title: body.title,
-      category: body.category || 'General',
-      level: body.level || 'Beginner',
-      instructorId: Number(body.instructorId) || 2,
-      summary: body.summary,
-      hero: body.hero || 'linear-gradient(135deg, #6944ff, #00b8d9)',
-      progress: 0,
-      rating: 0,
-      lessons: []
-    };
-    store.courses.push(course);
-    await writeStore(store);
-    return sendJson(res, 201, course);
-  }
-
-  if (req.method === 'POST' && route === '/api/assignments') {
-    const body = await parseBody(req);
-    if (!body.courseId || !body.title || !body.dueDate) {
-      return badRequest(res, 'Assignment courseId, title, and dueDate are required.');
-    }
-    const assignment = {
-      id: nextId(store.assignments),
-      courseId: Number(body.courseId),
-      title: body.title,
-      dueDate: body.dueDate,
-      points: Number(body.points) || 100,
-      status: body.status || 'open',
-      submissions: 0
-    };
-    store.assignments.push(assignment);
-    await writeStore(store);
-    return sendJson(res, 201, assignment);
-  }
-
-  if (req.method === 'POST' && route === '/api/announcements') {
-    const body = await parseBody(req);
-    if (!body.title || !body.message) return badRequest(res, 'Announcement title and message are required.');
-    const announcement = {
-      id: nextId(store.announcements),
-      title: body.title,
-      message: body.message,
-      audience: body.audience || 'All learners',
-      date: body.date || new Date().toISOString().slice(0, 10)
-    };
-    store.announcements.unshift(announcement);
-    await writeStore(store);
-    return sendJson(res, 201, announcement);
-  }
+  const handled = await handleCollectionApi(req, res, store, route);
+  if (handled !== false) return handled;
 
   return notFound(res);
 }

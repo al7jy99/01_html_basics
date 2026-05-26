@@ -90,3 +90,79 @@ test('announcement creation adds a new announcement to the top of the feed', asy
   const bootstrap = await fetch(`${app.baseUrl}/api/bootstrap`).then((item) => item.json());
   assert.equal(bootstrap.announcements[0].title, 'Welcome');
 });
+
+test('all LMS resource collections expose list endpoints', async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+
+  for (const collection of ['users', 'courses', 'assignments', 'quizzes', 'grades', 'announcements', 'discussions', 'calendar']) {
+    const response = await fetch(`${app.baseUrl}/api/${collection}`);
+    assert.equal(response.status, 200, collection);
+    const payload = await response.json();
+    assert.ok(Array.isArray(payload), collection);
+  }
+});
+
+test('quiz, grade, discussion, calendar, and user creation persist records', async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+
+  const requests = [
+    ['users', { name: 'Sam Rivera', role: 'student', email: 'sam.rivera@learnflow.test' }, 'name'],
+    ['quizzes', { courseId: 101, title: 'Semantic HTML retake', questions: 6, published: true }, 'title'],
+    ['grades', { studentId: 3, courseId: 103, score: 98 }, 'letter'],
+    ['discussions', { courseId: 101, author: 'Sam Rivera', title: 'ARIA landmarks help' }, 'title'],
+    ['calendar', { title: 'Capstone kickoff', date: '2026-06-10', time: '10:00' }, 'title']
+  ];
+
+  for (const [collection, body, expectedField] of requests) {
+    const response = await fetch(`${app.baseUrl}/api/${collection}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    assert.equal(response.status, 201, collection);
+    const payload = await response.json();
+    assert.ok(payload.id, collection);
+    assert.ok(payload[expectedField], collection);
+  }
+
+  const stored = JSON.parse(await fs.readFile(app.dataFile, 'utf8'));
+  assert.ok(stored.users.some((item) => item.name === 'Sam Rivera'));
+  assert.ok(stored.quizzes.some((item) => item.title === 'Semantic HTML retake'));
+  assert.ok(stored.grades.some((item) => item.score === 98 && item.letter === 'A+'));
+  assert.ok(stored.discussions.some((item) => item.title === 'ARIA landmarks help'));
+  assert.ok(stored.calendar.some((item) => item.title === 'Capstone kickoff'));
+});
+
+test('records can be retrieved, updated, and deleted by id', async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+
+  const created = await fetch(`${app.baseUrl}/api/assignments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ courseId: 101, title: 'Final reflection', dueDate: '2026-06-12' })
+  }).then((response) => response.json());
+
+  const detail = await fetch(`${app.baseUrl}/api/assignments/${created.id}`);
+  assert.equal(detail.status, 200);
+  assert.equal((await detail.json()).title, 'Final reflection');
+
+  const updated = await fetch(`${app.baseUrl}/api/assignments/${created.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'closed', submissions: 24 })
+  });
+  assert.equal(updated.status, 200);
+  const updatedPayload = await updated.json();
+  assert.equal(updatedPayload.status, 'closed');
+  assert.equal(updatedPayload.submissions, 24);
+  assert.equal(updatedPayload.title, 'Final reflection');
+
+  const removed = await fetch(`${app.baseUrl}/api/assignments/${created.id}`, { method: 'DELETE' });
+  assert.equal(removed.status, 200);
+
+  const missing = await fetch(`${app.baseUrl}/api/assignments/${created.id}`);
+  assert.equal(missing.status, 404);
+});
